@@ -68,12 +68,30 @@ export function House({ def }: { def: HouseDef }) {
         <meshStandardMaterial color={def.roof} roughness={0.85} />
       </mesh>
 
-      {/* glowing windows (front) */}
+      {/* glowing windows — every house has them, on the front and both sides */}
       <mesh position={[-(D + H) / 2, winY, H + 0.02]}>
         <planeGeometry args={[1, 1.2]} />
         <meshStandardMaterial color={GLOW} emissive={GLOW} emissiveIntensity={1.2} toneMapped={false} />
       </mesh>
       <mesh position={[(D + H) / 2, winY, H + 0.02]}>
+        <planeGeometry args={[1, 1.2]} />
+        <meshStandardMaterial color={GLOW} emissive={GLOW} emissiveIntensity={1.2} toneMapped={false} />
+      </mesh>
+      {/* left side */}
+      <mesh position={[-H - 0.02, winY, -H / 2]} rotation={[0, -Math.PI / 2, 0]}>
+        <planeGeometry args={[1, 1.2]} />
+        <meshStandardMaterial color={GLOW} emissive={GLOW} emissiveIntensity={1.2} toneMapped={false} />
+      </mesh>
+      <mesh position={[-H - 0.02, winY, H / 2]} rotation={[0, -Math.PI / 2, 0]}>
+        <planeGeometry args={[1, 1.2]} />
+        <meshStandardMaterial color={GLOW} emissive={GLOW} emissiveIntensity={1.2} toneMapped={false} />
+      </mesh>
+      {/* right side */}
+      <mesh position={[H + 0.02, winY, -H / 2]} rotation={[0, Math.PI / 2, 0]}>
+        <planeGeometry args={[1, 1.2]} />
+        <meshStandardMaterial color={GLOW} emissive={GLOW} emissiveIntensity={1.2} toneMapped={false} />
+      </mesh>
+      <mesh position={[H + 0.02, winY, H / 2]} rotation={[0, Math.PI / 2, 0]}>
         <planeGeometry args={[1, 1.2]} />
         <meshStandardMaterial color={GLOW} emissive={GLOW} emissiveIntensity={1.2} toneMapped={false} />
       </mesh>

@@ -37,6 +37,9 @@ const MODEL_URLS = {
   cat: asset('/models/cat.glb'),
   dog: asset('/models/dog.glb'),
   cow: asset('/models/cow.glb'),
+  beaver: asset('/models/beaver.glb'),
+  tiger: asset('/models/tiger.glb'),
+  hummingbird: asset('/models/hummingbird.glb'),
 } as const
 
 export type ModelKey = keyof typeof MODEL_URLS

@@ -1,25 +1,12 @@
-import { useMemo, useRef } from 'react'
+import { useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { addGold } from './wallet'
 import { GARDEN_HALF, WALL_MARGIN } from './constants'
 import { HOUSES } from './layout'
 
-const COIN_COUNT = 14
-const COIN_VALUE = 5
 const PICKUP_RADIUS = 1.4
 const COIN_Y = 0.7
-
-function makeRng(seed: number) {
-  let a = seed
-  return () => {
-    a |= 0
-    a = (a + 0x6d2b79f5) | 0
-    let t = Math.imul(a ^ (a >>> 15), 1 | a)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
 
 // True if (x,z) sits inside (or right next to) any village house.
 function insideAnyHouse(x: number, z: number) {
@@ -28,19 +15,16 @@ function insideAnyHouse(x: number, z: number) {
   )
 }
 
-// Scatter coins across the garden, avoiding the village houses.
-function gardenCoinSpots() {
-  const rng = makeRng(7)
-  const spots: [number, number, number][] = []
+// One random coin spot inside the garden, avoiding the village houses.
+export function gardenCoinSpot(): [number, number, number] {
   const limit = GARDEN_HALF - WALL_MARGIN - 1
-  let guard = 0
-  while (spots.length < COIN_COUNT && guard++ < 500) {
-    const x = (rng() * 2 - 1) * limit
-    const z = (rng() * 2 - 1) * limit
+  for (let guard = 0; guard < 100; guard++) {
+    const x = (Math.random() * 2 - 1) * limit
+    const z = (Math.random() * 2 - 1) * limit
     if (insideAnyHouse(x, z)) continue
-    spots.push([x, COIN_Y, z])
+    return [x, COIN_Y, z]
   }
-  return spots
+  return [0, COIN_Y, 0]
 }
 
 // A point on the perimeter of a square of half-size R (f in 0..1).
@@ -55,49 +39,73 @@ function rectPoint(R: number, f: number): [number, number, number] {
   return [-R, COIN_Y, -c]
 }
 
-// Dangerous coins scattered just outside the fence, among the zombies.
-export function graveyardCoinSpots(): [number, number, number][] {
-  const rng = makeRng(21)
-  return Array.from({ length: 10 }, () => rectPoint(GARDEN_HALF + 1.8 + rng() * 4.5, rng()))
+// One random dangerous coin spot just outside the fence, among the zombies.
+export function graveyardCoinSpot(): [number, number, number] {
+  return rectPoint(GARDEN_HALF + 1.8 + Math.random() * 4.5, Math.random())
 }
 
 /**
- * Spinning gold coins the player picks up by walking near them. Reusable for the
- * garden (default) or, later, the dangerous graveyard by passing custom spots.
+ * Spinning gold coins the player picks up by walking near them. Shared by the
+ * garden and the dangerous graveyard: `makeSpot` decides which zone a coin lives
+ * in, and (if `respawn` is given) each coin comes back at a fresh spot a little
+ * while after it's collected — a steady trickle so there's always something to grab.
  */
 export function Coins({
-  spots,
-  value = COIN_VALUE,
+  count,
+  value,
+  makeSpot,
+  respawn,
 }: {
-  spots?: [number, number, number][]
-  value?: number
+  count: number
+  value: number
+  makeSpot: () => [number, number, number]
+  respawn?: { min: number; max: number }
 }) {
-  const positions = useMemo(() => spots ?? gardenCoinSpots(), [spots])
+  const positions = useRef<[number, number, number][]>(
+    Array.from({ length: count }, () => makeSpot()),
+  )
   const refs = useRef<(THREE.Group | null)[]>([])
-  const collected = useRef<boolean[]>(positions.map(() => false))
+  const collected = useRef<boolean[]>(positions.current.map(() => false))
+  const respawnAt = useRef<number[]>(positions.current.map(() => 0))
   const { camera } = useThree()
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    for (let i = 0; i < positions.length; i++) {
-      if (collected.current[i]) continue
+    for (let i = 0; i < positions.current.length; i++) {
       const g = refs.current[i]
       if (!g) continue
+
+      if (collected.current[i]) {
+        // Waiting to respawn? Bring the coin back at a fresh spot once it's time.
+        if (respawn && t >= respawnAt.current[i]) {
+          const spot = makeSpot()
+          positions.current[i] = spot
+          g.position.set(spot[0], COIN_Y, spot[2])
+          g.visible = true
+          collected.current[i] = false
+        }
+        continue
+      }
+
+      const p = positions.current[i]
       g.rotation.y = t * 2 + i
       g.position.y = COIN_Y + Math.sin(t * 2 + i) * 0.12
-      const dx = camera.position.x - positions[i][0]
-      const dz = camera.position.z - positions[i][2]
+      const dx = camera.position.x - p[0]
+      const dz = camera.position.z - p[2]
       if (dx * dx + dz * dz < PICKUP_RADIUS * PICKUP_RADIUS) {
         collected.current[i] = true
         g.visible = false
         addGold(value)
+        if (respawn) {
+          respawnAt.current[i] = t + respawn.min + Math.random() * (respawn.max - respawn.min)
+        }
       }
     }
   })
 
   return (
     <group>
-      {positions.map((p, i) => (
+      {positions.current.map((p, i) => (
         <group
           key={i}
           position={p}

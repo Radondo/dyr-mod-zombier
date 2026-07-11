@@ -12,6 +12,17 @@ export const WALL_MARGIN = 0.6 // how far inside the fence the player is stopped
 // Fence
 export const FENCE_HEIGHT = 1.4
 
+// ---- Coins (gold to pick up) ------------------------------------------------
+// More coins OUTSIDE the fence, and worth more, to tempt the player past the
+// zombies. Every coin spot comes back a little while after it's picked up
+// ("lidt ad gangen"), so there is almost always something to collect.
+export const GARDEN_COIN_COUNT = 20 // coins inside the fence
+export const GARDEN_COIN_VALUE = 5
+export const GRAVEYARD_COIN_COUNT = 24 // coins outside the fence, among the zombies
+export const GRAVEYARD_COIN_VALUE = 10
+export const COIN_RESPAWN_MIN = 8 // seconds before a picked-up coin spot returns
+export const COIN_RESPAWN_MAX = 16
+
 // ---- Cottage (built from primitives so you can walk inside) -----------------
 // A big house (~5x the first version) at the back edge of the garden, with the
 // door facing the garden (+z side).

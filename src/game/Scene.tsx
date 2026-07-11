@@ -1,18 +1,25 @@
 import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Sky } from '@react-three/drei'
-import { EYE_HEIGHT, GARDEN_HALF } from './constants'
+import {
+  EYE_HEIGHT,
+  GARDEN_HALF,
+  GARDEN_COIN_COUNT,
+  GARDEN_COIN_VALUE,
+  GRAVEYARD_COIN_COUNT,
+  GRAVEYARD_COIN_VALUE,
+  COIN_RESPAWN_MIN,
+  COIN_RESPAWN_MAX,
+} from './constants'
 import { World } from './World'
 import { Player } from './Player'
 import { Hands } from './Hands'
 import { Companions } from './Companions'
 import { Zombies } from './Zombies'
-import { Coins, graveyardCoinSpots } from './Coins'
+import { Coins, gardenCoinSpot, graveyardCoinSpot } from './Coins'
+import { Diamonds } from './Diamonds'
 import { Shop } from './Shop'
 import { Pets } from './Pets'
-
-// Dangerous coins out among the zombies (computed once, stable reference).
-const GRAVEYARD_COINS = graveyardCoinSpots()
 
 export function Scene() {
   return (
@@ -61,8 +68,22 @@ export function Scene() {
         <Pets />
       </Suspense>
 
-      <Coins />
-      <Coins spots={GRAVEYARD_COINS} value={10} />
+      {/* Blue diamonds worth 100 gold: one in the garden, some out by the zombies. */}
+      <Diamonds count={1} zone="garden" />
+      <Diamonds count={3} zone="graveyard" />
+
+      <Coins
+        count={GARDEN_COIN_COUNT}
+        value={GARDEN_COIN_VALUE}
+        makeSpot={gardenCoinSpot}
+        respawn={{ min: COIN_RESPAWN_MIN, max: COIN_RESPAWN_MAX }}
+      />
+      <Coins
+        count={GRAVEYARD_COIN_COUNT}
+        value={GRAVEYARD_COIN_VALUE}
+        makeSpot={graveyardCoinSpot}
+        respawn={{ min: COIN_RESPAWN_MIN, max: COIN_RESPAWN_MAX }}
+      />
 
       <Hands />
       <Player />

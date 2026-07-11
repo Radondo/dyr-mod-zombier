@@ -52,11 +52,11 @@ export const HOUSES: HouseDef[] = (() => {
     {
       pos: [-5, 0, -3],
       rotY: 0, // door + BUTIK sign face +z, toward the player's start
-      half: 3.5,
-      height: 8,
+      half: 6, // ~3x bigger than a normal house, to hold all the animals
+      height: 10,
       shop: true,
-      wall: '#e6d3a8',
-      roof: '#8a3a2a',
+      wall: '#f5a8c8', // pink shop
+      roof: '#b03a6a',
     },
   ]
   let guard = 0

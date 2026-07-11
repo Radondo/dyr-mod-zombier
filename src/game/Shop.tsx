@@ -4,7 +4,7 @@ import { Billboard } from '@react-three/drei'
 import * as THREE from 'three'
 import { Model, ModelKey } from './models'
 import { Sign } from './signs'
-import { wallet } from './wallet'
+import { wallet, buyPet } from './wallet'
 import { shopUI } from './shopState'
 import { HOUSES } from './layout'
 
@@ -19,16 +19,19 @@ type ShopAnimal = {
   local: [number, number, number]
 }
 
-// Three animals for sale, placed inside the (rotY 0) BUTIK building.
+// Six animals for sale, placed in two rows inside the (rotY 0) BUTIK building.
 const ANIMALS: ShopAnimal[] = [
-  { kind: 'cat', label: 'Kat', price: 25, size: 0.55, local: [-2, 0, -1.6] },
-  { kind: 'dog', label: 'Hund', price: 45, size: 0.85, local: [0, 0, -2.4] },
-  { kind: 'cow', label: 'Ko', price: 80, size: 1.5, local: [2, 0, -1.6] },
+  { kind: 'cat', label: 'Kat', price: 25, size: 0.55, local: [-4, 0, -2] },
+  { kind: 'dog', label: 'Hund', price: 45, size: 0.85, local: [0, 0, -2] },
+  { kind: 'cow', label: 'Ko', price: 80, size: 1.5, local: [4, 0, -2] },
+  { kind: 'beaver', label: 'Bæver', price: 60, size: 0.7, local: [-4, 0, -4.5] },
+  { kind: 'tiger', label: 'Tiger', price: 150, size: 1.3, local: [0, 0, -4.5] },
+  { kind: 'hummingbird', label: 'Kæmpe kolibri', price: 120, size: 1.1, local: [4, 0, -4.5] },
 ]
 
 export function Shop() {
   const { camera } = useThree()
-  const boughtRef = useRef([false, false, false])
+  const boughtRef = useRef(ANIMALS.map(() => false))
   const activeRef = useRef<number | null>(null)
   const [, force] = useReducer((n: number) => n + 1, 0)
 
@@ -50,7 +53,7 @@ export function Shop() {
       const a = ANIMALS[i]
       if (wallet.gold >= a.price) {
         wallet.gold -= a.price
-        wallet.pets.push(a.kind)
+        buyPet(a.kind)
         boughtRef.current[i] = true
         activeRef.current = null
         shopUI.prompt = null

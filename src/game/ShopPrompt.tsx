@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { shopUI } from './shopState'
+import { petUI } from './petState'
 
-// Bottom-of-screen "click to buy" prompt when you stand in front of a shop
-// animal. Inline styles keep it self-contained (no App.css changes).
+// Bottom-of-screen prompt: "click to buy" in the shop, or "click to swap" when
+// you talk to a pet. Inline styles keep it self-contained (no App.css changes).
 export function ShopPrompt() {
   const [prompt, setPrompt] = useState<string | null>(null)
   const [affordable, setAffordable] = useState(true)
@@ -10,8 +11,16 @@ export function ShopPrompt() {
   useEffect(() => {
     let raf = 0
     const tick = () => {
-      setPrompt(shopUI.prompt)
-      setAffordable(shopUI.affordable)
+      // Shop prompt takes priority; otherwise show the pet prompt (neutral colour).
+      if (shopUI.prompt) {
+        setPrompt(shopUI.prompt)
+        setAffordable(shopUI.affordable)
+      } else if (petUI.prompt) {
+        setPrompt(petUI.prompt)
+        setAffordable(true)
+      } else {
+        setPrompt(null)
+      }
       raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)

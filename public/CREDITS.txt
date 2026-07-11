@@ -12,8 +12,8 @@ Dyr Mod Zombier — asset credits
   - Gravestone (grave2) by sirkitree        https://poly.pizza/m/2U7G1pkP87N
   - Gravestone (grave3) by sirkitree        https://poly.pizza/m/46vDmbyxgqQ
   - Cross              by Poly by Google    https://poly.pizza/m/1uQSi6qTp6o
-  - Beaver             by Poly by Google    https://poly.pizza/m/0f0cS20idvd
-  - Tiger              by Poly by Google    https://poly.pizza/m/0PXWfxfb0Hu
+  - Beaver             by Poly by Google    https://poly.pizza/m/fwtA7VLrXPr
+  - Tiger              by Poly by Google    https://poly.pizza/m/1Ys07E47FNX
   - Hummingbird        by Poly by Google    https://poly.pizza/m/0myA_BOcZrD
 
 3D models — CC0 (public domain, no attribution required, credited anyway):

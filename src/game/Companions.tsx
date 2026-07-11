@@ -1,7 +1,8 @@
 import { useMemo, useRef } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Model } from './models'
+import { player } from './playerState'
 import {
   BEE_HEIGHT,
   LADYBUG_SIZE,
@@ -21,7 +22,6 @@ type CompanionProps = {
 
 function Companion({ kind, size, side, buzz, freq }: CompanionProps) {
   const ref = useRef<THREE.Group>(null)
-  const { camera } = useThree()
   const target = useMemo(() => new THREE.Vector3(), [])
 
   useFrame((state) => {
@@ -31,8 +31,8 @@ function Companion({ kind, size, side, buzz, freq }: CompanionProps) {
     const limit = GARDEN_HALF - WALL_MARGIN
 
     // Hover to one side of the player, with a little buzzing circle + bob.
-    const x = camera.position.x + side * 1.2 + Math.cos(t * buzz) * 0.35
-    const z = camera.position.z + 0.9 + Math.sin(t * buzz * 0.9) * 0.35
+    const x = player.pos.x + side * 1.2 + Math.cos(t * buzz) * 0.35
+    const z = player.pos.z + 0.9 + Math.sin(t * buzz * 0.9) * 0.35
     const y = COMPANION_ALTITUDE + Math.sin(t * freq) * 0.18
 
     target.set(

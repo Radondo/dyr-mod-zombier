@@ -6,6 +6,7 @@ import { Model, ModelKey } from './models'
 import { Sign } from './signs'
 import { wallet, buyPet } from './wallet'
 import { shopUI } from './shopState'
+import { player } from './playerState'
 import { HOUSES } from './layout'
 
 const BUY_RANGE = 3.2
@@ -73,8 +74,8 @@ export function Shop() {
     let bestDist = Infinity
     for (let i = 0; i < ANIMALS.length; i++) {
       if (boughtRef.current[i]) continue
-      const dx = worldPos[i].x - camera.position.x
-      const dz = worldPos[i].z - camera.position.z
+      const dx = worldPos[i].x - player.pos.x
+      const dz = worldPos[i].z - player.pos.z
       const dist = Math.hypot(dx, dz)
       if (dist > BUY_RANGE || dist < 0.001) continue
       const dot = (dx / dist) * fwd.x + (dz / dist) * fwd.z

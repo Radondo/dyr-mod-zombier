@@ -1,22 +1,22 @@
-import { useEffect, useMemo } from 'react'
-import { PointerLockControls } from '@react-three/drei'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import {
-  MOVE_SPEED,
-  EYE_HEIGHT,
-  GARDEN_HALF,
-  PLAYER_RADIUS,
-  COTTAGE_WALL_T,
-} from './constants'
+import { MOVE_SPEED, GARDEN_HALF, PLAYER_RADIUS, COTTAGE_WALL_T } from './constants'
 import { WALL_SEGMENTS } from './layout'
 import { input, isTouchDevice } from './input'
+import { player } from './playerState'
+import { Girl } from './Girl'
 
-// Touch look sensitivity, in radians per pixel of drag (tablets only — desktop
-// uses PointerLockControls, which stays exactly as it was on laptop).
-const LOOK_SPEED = 0.0026
-// Never look quite straight up/down, so the horizon can't flip.
-const MAX_PITCH = THREE.MathUtils.degToRad(85)
+// Third-person camera: it orbits the girl. `yaw`/`pitch` are the orbit angles;
+// the girl moves in camera-relative directions (GTA / Roblox style) and turns to
+// face the way she walks.
+const LOOK_SPEED = 0.0028
+const MIN_PITCH = -0.45 // looking down at her
+const MAX_PITCH = 0.95 // looking up past her
+const CAM_DISTANCE = 6
+const CAM_HEIGHT = 2.3
+const LOOK_AT_HEIGHT = 1.4
+const TURN_LERP = 0.2
 
 function useKeyboard() {
   const keys = useMemo(() => ({}) as Record<string, boolean>, [])
@@ -37,23 +37,12 @@ function useKeyboard() {
   return keys
 }
 
-// Scratch vectors, hoisted so useFrame allocates nothing per frame.
-const forward = new THREE.Vector3()
-const right = new THREE.Vector3()
-const move = new THREE.Vector3()
-const euler = new THREE.Euler(0, 0, 0, 'YXZ') // yaw (Y) then pitch (X)
-
+const moveDir = new THREE.Vector3()
 const WALL_MIN_DIST = PLAYER_RADIUS + COTTAGE_WALL_T / 2
 
-// Push the player (px,pz) out of a wall segment a→b if too close (capsule test).
-// The door gap is simply a missing segment, so you can walk through it.
-function collideWall(
-  pos: THREE.Vector3,
-  ax: number,
-  az: number,
-  bx: number,
-  bz: number,
-) {
+// Push (px,pz) out of a wall segment a→b (capsule test); door/gate gaps are just
+// missing segments, so you can walk through them.
+function collideWall(pos: THREE.Vector3, ax: number, az: number, bx: number, bz: number) {
   const abx = bx - ax
   const abz = bz - az
   const len2 = abx * abx + abz * abz || 1
@@ -76,71 +65,102 @@ function collideWall(
 
 export function Player() {
   const keys = useKeyboard()
-  const { camera } = useThree()
-  // On tablets we drive the camera orientation by hand from the touch drag.
-  // On desktop this is unused — PointerLockControls owns the camera rotation.
-  const orient = useMemo(() => ({ yaw: 0, pitch: 0 }), [])
+  const { camera, gl } = useThree()
+  const orient = useMemo(() => ({ yaw: Math.PI, pitch: 0.32 }), [])
+  const girlRef = useRef<THREE.Group>(null)
 
-  // Start standing in the garden near the gate, looking toward the village
-  // (yaw 0 = facing -z, straight down the street).
   useEffect(() => {
-    camera.position.set(0, EYE_HEIGHT, GARDEN_HALF - 4)
-    camera.lookAt(0, EYE_HEIGHT, -GARDEN_HALF)
-    orient.yaw = 0
-    orient.pitch = 0
-  }, [camera, orient])
+    player.pos.set(0, 0, GARDEN_HALF - 4)
+    player.facing = Math.PI // face -z, toward the village
+    orient.yaw = Math.PI
+    orient.pitch = 0.32
+  }, [orient])
+
+  // Desktop: click to lock the pointer; moving the mouse then orbits the camera
+  // (feeds the same input.look the touch overlay uses on tablet).
+  useEffect(() => {
+    if (isTouchDevice) return
+    const el = gl.domElement
+    const onClick = () => {
+      if (document.pointerLockElement !== el) el.requestPointerLock?.()
+    }
+    const onMove = (e: MouseEvent) => {
+      if (document.pointerLockElement === el) {
+        input.look.dx += e.movementX
+        input.look.dy += e.movementY
+      }
+    }
+    el.addEventListener('click', onClick)
+    window.addEventListener('mousemove', onMove)
+    return () => {
+      el.removeEventListener('click', onClick)
+      window.removeEventListener('mousemove', onMove)
+    }
+  }, [gl])
 
   useFrame((_, delta) => {
-    // ---- Look: tablets only. Apply the accumulated touch drag, then zero it.
-    // Desktop keeps the original PointerLockControls (move mouse to look). -----
-    if (isTouchDevice) {
-      if (input.look.dx !== 0 || input.look.dy !== 0) {
-        orient.yaw -= input.look.dx * LOOK_SPEED
-        orient.pitch -= input.look.dy * LOOK_SPEED
-        orient.pitch = THREE.MathUtils.clamp(orient.pitch, -MAX_PITCH, MAX_PITCH)
-        input.look.dx = 0
-        input.look.dy = 0
-      }
-      euler.set(orient.pitch, orient.yaw, 0)
-      camera.quaternion.setFromEuler(euler)
+    // ---- Look: orbit the camera (mouse drag or touch both feed input.look). ---
+    if (input.look.dx !== 0 || input.look.dy !== 0) {
+      orient.yaw -= input.look.dx * LOOK_SPEED
+      orient.pitch += input.look.dy * LOOK_SPEED
+      orient.pitch = THREE.MathUtils.clamp(orient.pitch, MIN_PITCH, MAX_PITCH)
+      input.look.dx = 0
+      input.look.dy = 0
     }
 
-    // ---- Move: keyboard WASD/arrows (laptop) plus the left touch joystick. --
-    let f = (keys['KeyW'] || keys['ArrowUp'] ? 1 : 0) - (keys['KeyS'] || keys['ArrowDown'] ? 1 : 0)
-    let r = (keys['KeyD'] || keys['ArrowRight'] ? 1 : 0) - (keys['KeyA'] || keys['ArrowLeft'] ? 1 : 0)
-    f += input.move.y
-    r += input.move.x
+    // ---- Move: camera-relative (forward = where the camera looks). ----
+    const f =
+      (keys['KeyW'] || keys['ArrowUp'] ? 1 : 0) -
+      (keys['KeyS'] || keys['ArrowDown'] ? 1 : 0) +
+      input.move.y
+    const r =
+      (keys['KeyD'] || keys['ArrowRight'] ? 1 : 0) -
+      (keys['KeyA'] || keys['ArrowLeft'] ? 1 : 0) +
+      input.move.x
 
-    if (f !== 0 || r !== 0) {
-      camera.getWorldDirection(forward)
-      forward.y = 0
-      forward.normalize()
-      right.crossVectors(forward, camera.up).normalize()
+    const fx = Math.sin(orient.yaw)
+    const fz = Math.cos(orient.yaw)
+    // right-hand strafe vector for a camera looking along (fx,fz) is (-cos, sin)
+    moveDir.set(fx * f - Math.cos(orient.yaw) * r, 0, fz * f + Math.sin(orient.yaw) * r)
+    if (moveDir.lengthSq() > 1) moveDir.normalize()
 
-      move.set(0, 0, 0).addScaledVector(forward, f).addScaledVector(right, r)
-      // Clamp to full speed (so keyboard + joystick can't stack), but leave
-      // shorter joystick pushes analog for finer control.
-      if (move.lengthSq() > 1) move.normalize()
-
-      camera.position.addScaledVector(move, MOVE_SPEED * delta)
+    if (moveDir.lengthSq() > 1e-4) {
+      player.pos.x += moveDir.x * MOVE_SPEED * delta
+      player.pos.z += moveDir.z * MOVE_SPEED * delta
+      // Turn the girl smoothly toward the way she's walking.
+      const target = Math.atan2(moveDir.x, moveDir.z)
+      let d = target - player.facing
+      while (d > Math.PI) d -= 2 * Math.PI
+      while (d < -Math.PI) d += 2 * Math.PI
+      player.facing += d * TURN_LERP
     }
 
-    // Collide with the fence perimeter + every village house. The gate gap and
-    // the house doorways are simply missing segments, so you can walk out
-    // through the gate and step inside houses.
-    for (const w of WALL_SEGMENTS) {
-      collideWall(camera.position, w.a[0], w.a[1], w.b[0], w.b[1])
-    }
-
-    // Safety net so you can't wander off the edge of the world past the gate.
+    // Collide with the fence + houses; clamp to a safe outer bound.
+    for (const w of WALL_SEGMENTS) collideWall(player.pos, w.a[0], w.a[1], w.b[0], w.b[1])
     const outer = GARDEN_HALF + 30
-    camera.position.x = THREE.MathUtils.clamp(camera.position.x, -outer, outer)
-    camera.position.z = THREE.MathUtils.clamp(camera.position.z, -outer, outer)
+    player.pos.x = THREE.MathUtils.clamp(player.pos.x, -outer, outer)
+    player.pos.z = THREE.MathUtils.clamp(player.pos.z, -outer, outer)
+    player.pos.y = 0
 
-    camera.position.y = EYE_HEIGHT
+    // ---- Camera orbits behind the girl. ----
+    const hDist = CAM_DISTANCE * Math.cos(orient.pitch)
+    camera.position.set(
+      player.pos.x - Math.sin(orient.yaw) * hDist,
+      player.pos.y + CAM_HEIGHT + Math.sin(orient.pitch) * CAM_DISTANCE,
+      player.pos.z - Math.cos(orient.yaw) * hDist,
+    )
+    camera.lookAt(player.pos.x, player.pos.y + LOOK_AT_HEIGHT, player.pos.z)
+
+    // ---- Place the girl. ----
+    if (girlRef.current) {
+      girlRef.current.position.copy(player.pos)
+      girlRef.current.rotation.y = player.facing
+    }
   })
 
-  // Desktop: the original mouse look (click to lock, move to look). Tablets use
-  // the on-screen TouchControls overlay instead, so no controls object here.
-  return isTouchDevice ? null : <PointerLockControls />
+  return (
+    <group ref={girlRef}>
+      <Girl />
+    </group>
+  )
 }

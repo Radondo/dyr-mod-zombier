@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { Model, ModelKey } from './models'
 import { wallet, toggleFollow, followingCount, petsSignature, MAX_FOLLOWERS, Pet } from './wallet'
 import { petUI } from './petState'
+import { player } from './playerState'
 import { GARDEN_HALF } from './constants'
 
 const SIZE: Record<string, number> = {
@@ -100,8 +101,8 @@ export function Pets() {
         const angle = 2.4 + followIdx * 1.35
         const radius = 1.8 + followIdx * 0.6
         followIdx++
-        const tx = camera.position.x + Math.cos(angle) * radius
-        const tz = camera.position.z + Math.sin(angle) * radius + 1.2
+        const tx = player.pos.x + Math.cos(angle) * radius
+        const tz = player.pos.z + Math.sin(angle) * radius + 1.2
         const ox = g.position.x
         const oz = g.position.z
         g.position.x += (tx - g.position.x) * 0.05
@@ -118,8 +119,8 @@ export function Pets() {
       }
 
       // Targeting for the click prompt.
-      const dx = g.position.x - camera.position.x
-      const dz = g.position.z - camera.position.z
+      const dx = g.position.x - player.pos.x
+      const dz = g.position.z - player.pos.z
       const dist = Math.hypot(dx, dz)
       if (dist <= INTERACT_RANGE && dist > 0.001) {
         const dot = (dx / dist) * fwd.x + (dz / dist) * fwd.z

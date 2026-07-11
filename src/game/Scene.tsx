@@ -13,7 +13,6 @@ import {
 } from './constants'
 import { World } from './World'
 import { Player } from './Player'
-import { Hands } from './Hands'
 import { Companions } from './Companions'
 import { Zombies } from './Zombies'
 import { Coins, gardenCoinSpot, graveyardCoinSpot } from './Coins'
@@ -85,7 +84,6 @@ export function Scene() {
         respawn={{ min: COIN_RESPAWN_MIN, max: COIN_RESPAWN_MAX }}
       />
 
-      <Hands />
       <Player />
     </Canvas>
   )

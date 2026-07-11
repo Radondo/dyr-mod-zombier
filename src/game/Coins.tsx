@@ -1,7 +1,8 @@
 import { useRef } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { addGold } from './wallet'
+import { player } from './playerState'
 import { GARDEN_HALF, WALL_MARGIN } from './constants'
 import { HOUSES } from './layout'
 
@@ -67,7 +68,6 @@ export function Coins({
   const refs = useRef<(THREE.Group | null)[]>([])
   const collected = useRef<boolean[]>(positions.current.map(() => false))
   const respawnAt = useRef<number[]>(positions.current.map(() => 0))
-  const { camera } = useThree()
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
@@ -90,8 +90,8 @@ export function Coins({
       const p = positions.current[i]
       g.rotation.y = t * 2 + i
       g.position.y = COIN_Y + Math.sin(t * 2 + i) * 0.12
-      const dx = camera.position.x - p[0]
-      const dz = camera.position.z - p[2]
+      const dx = player.pos.x - p[0]
+      const dz = player.pos.z - p[2]
       if (dx * dx + dz * dz < PICKUP_RADIUS * PICKUP_RADIUS) {
         collected.current[i] = true
         g.visible = false

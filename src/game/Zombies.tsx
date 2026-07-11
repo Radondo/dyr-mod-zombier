@@ -1,10 +1,10 @@
 import { useMemo, useRef } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Model } from './models'
+import { player } from './playerState'
 import {
   GARDEN_HALF,
-  EYE_HEIGHT,
   ZOMBIE_COUNT,
   ZOMBIE_HEIGHT,
   ZOMBIE_SPEED,
@@ -68,12 +68,11 @@ export function Zombies() {
 
   const refs = useRef<(THREE.Group | null)[]>([])
   const target = useMemo(() => new THREE.Vector2(), [])
-  const { camera } = useThree()
 
   useFrame((state, delta) => {
     const t = state.clock.elapsedTime
-    const px = camera.position.x
-    const pz = camera.position.z
+    const px = player.pos.x
+    const pz = player.pos.z
     const bound = GARDEN_HALF + 0.5
     // The player is "outside" (in the graveyard) when past the fence square.
     const outside = Math.abs(px) > GARDEN_HALF + 0.1 || Math.abs(pz) > GARDEN_HALF + 0.1
@@ -102,7 +101,7 @@ export function Zombies() {
         // Caught!
         if (distToPlayer < CATCH_DISTANCE) {
           triggerCaught()
-          camera.position.set(0, EYE_HEIGHT, GARDEN_HALF - 4)
+          player.pos.set(0, 0, GARDEN_HALF - 4)
         }
       } else {
         // Patrol the perimeter ring, easing back onto it after any chase.

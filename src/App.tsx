@@ -25,8 +25,10 @@ function App() {
             </>
           ) : (
             <>
-              <div className="hint-line">Klik og træk musen for at kigge rundt</div>
-              <div className="hint-line">WASD eller piletaster for at gå</div>
+              <div className="hint-line">Klik for at kigge rundt</div>
+              <div className="hint-line">
+                WASD eller piletaster for at gå · Esc for at slippe musen
+              </div>
             </>
           )}
         </div>

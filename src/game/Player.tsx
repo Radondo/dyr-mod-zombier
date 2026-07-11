@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react'
+import { PointerLockControls } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import {
@@ -8,11 +9,13 @@ import {
   WALL_MARGIN,
   PLAYER_RADIUS,
   COTTAGE_WALL_T,
+  COTTAGE_POS,
 } from './constants'
 import { COTTAGE_WALLS } from './Cottage'
 import { input, isTouchDevice } from './input'
 
-// How fast looking around is, in radians per pixel of drag.
+// Touch look sensitivity, in radians per pixel of drag (tablets only — desktop
+// uses PointerLockControls, which stays exactly as it was on laptop).
 const LOOK_SPEED = 0.0026
 // Never look quite straight up/down, so the horizon can't flip.
 const MAX_PITCH = THREE.MathUtils.degToRad(85)
@@ -76,58 +79,35 @@ function collideWall(
 export function Player() {
   const keys = useKeyboard()
   const { camera } = useThree()
-  // Camera orientation we drive by hand (replaces PointerLockControls). Kept in
-  // a stable object so useFrame mutates it without re-rendering.
+  // On tablets we drive the camera orientation by hand from the touch drag.
+  // On desktop this is unused — PointerLockControls owns the camera rotation.
   const orient = useMemo(() => ({ yaw: 0, pitch: 0 }), [])
 
   // Start standing in the garden, in front of the cottage, looking toward it
   // (yaw 0 = facing -z, straight at the cottage).
   useEffect(() => {
     camera.position.set(0, EYE_HEIGHT, GARDEN_HALF - 3)
+    camera.lookAt(0, EYE_HEIGHT, COTTAGE_POS[2])
     orient.yaw = 0
     orient.pitch = 0
   }, [camera, orient])
 
-  // Desktop: click-and-drag the mouse to look around (touch is handled by the
-  // on-screen TouchControls overlay, which writes into input.look the same way).
-  useEffect(() => {
-    if (isTouchDevice) return
-    let dragging = false
-    const down = (e: PointerEvent) => {
-      if (e.button === 0) dragging = true
-    }
-    const move = (e: PointerEvent) => {
-      if (dragging) {
-        input.look.dx += e.movementX
-        input.look.dy += e.movementY
-      }
-    }
-    const up = () => {
-      dragging = false
-    }
-    window.addEventListener('pointerdown', down)
-    window.addEventListener('pointermove', move)
-    window.addEventListener('pointerup', up)
-    return () => {
-      window.removeEventListener('pointerdown', down)
-      window.removeEventListener('pointermove', move)
-      window.removeEventListener('pointerup', up)
-    }
-  }, [])
-
   useFrame((_, delta) => {
-    // ---- Look: apply accumulated drag (mouse or touch), then zero it. -------
-    if (input.look.dx !== 0 || input.look.dy !== 0) {
-      orient.yaw -= input.look.dx * LOOK_SPEED
-      orient.pitch -= input.look.dy * LOOK_SPEED
-      orient.pitch = THREE.MathUtils.clamp(orient.pitch, -MAX_PITCH, MAX_PITCH)
-      input.look.dx = 0
-      input.look.dy = 0
+    // ---- Look: tablets only. Apply the accumulated touch drag, then zero it.
+    // Desktop keeps the original PointerLockControls (move mouse to look). -----
+    if (isTouchDevice) {
+      if (input.look.dx !== 0 || input.look.dy !== 0) {
+        orient.yaw -= input.look.dx * LOOK_SPEED
+        orient.pitch -= input.look.dy * LOOK_SPEED
+        orient.pitch = THREE.MathUtils.clamp(orient.pitch, -MAX_PITCH, MAX_PITCH)
+        input.look.dx = 0
+        input.look.dy = 0
+      }
+      euler.set(orient.pitch, orient.yaw, 0)
+      camera.quaternion.setFromEuler(euler)
     }
-    euler.set(orient.pitch, orient.yaw, 0)
-    camera.quaternion.setFromEuler(euler)
 
-    // ---- Move: keyboard WASD/arrows plus the left touch joystick. ----------
+    // ---- Move: keyboard WASD/arrows (laptop) plus the left touch joystick. --
     let f = (keys['KeyW'] || keys['ArrowUp'] ? 1 : 0) - (keys['KeyS'] || keys['ArrowDown'] ? 1 : 0)
     let r = (keys['KeyD'] || keys['ArrowRight'] ? 1 : 0) - (keys['KeyA'] || keys['ArrowLeft'] ? 1 : 0)
     f += input.move.y
@@ -160,5 +140,7 @@ export function Player() {
     camera.position.y = EYE_HEIGHT
   })
 
-  return null
+  // Desktop: the original mouse look (click to lock, move to look). Tablets use
+  // the on-screen TouchControls overlay instead, so no controls object here.
+  return isTouchDevice ? null : <PointerLockControls />
 }

@@ -1,12 +1,9 @@
-import { HOUSE_HALF, HOUSE_HEIGHT, HOUSE_WALL_T, HOUSE_DOOR_HALF, HouseDef } from './layout'
+import { HOUSE_WALL_T, HOUSE_DOOR_HALF, HouseDef } from './layout'
 import { Sign } from './signs'
 
-const H = HOUSE_HALF
 const T = HOUSE_WALL_T
-const WH = HOUSE_HEIGHT
 const D = HOUSE_DOOR_HALF
 const DOOR_H = 2.7
-const ROOF_H = 3.2
 const FRAME = '#4a3524'
 const GLOW = '#ffcf7a'
 
@@ -27,9 +24,13 @@ function Wall({
   )
 }
 
-/** One tall village house — walls with a doorway, roof, glowing windows, and an
- *  optional sign (used for the BUTIK shop). Placed + rotated in world space. */
+/** One village house — walls with a doorway, roof, glowing windows, optional
+ *  BUTIK sign. Size, position and facing come from its HouseDef. */
 export function House({ def }: { def: HouseDef }) {
+  const H = def.half
+  const WH = def.height
+  const ROOF_H = H * 0.95
+  const winY = DOOR_H + (WH - DOOR_H) * 0.45
   const frontSegW = H - D
   const wall = def.wall
 
@@ -63,22 +64,22 @@ export function House({ def }: { def: HouseDef }) {
 
       {/* pyramid roof */}
       <mesh position={[0, WH + ROOF_H / 2 - 0.02, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
-        <coneGeometry args={[H * Math.SQRT2 + 0.5, ROOF_H, 4]} />
+        <coneGeometry args={[H * Math.SQRT2 + 0.4, ROOF_H, 4]} />
         <meshStandardMaterial color={def.roof} roughness={0.85} />
       </mesh>
 
-      {/* glowing upstairs windows (front) — cheap emissive, no real light */}
-      <mesh position={[-(D + H) / 2, DOOR_H + 1.6, H + 0.02]}>
-        <planeGeometry args={[1.1, 1.3]} />
+      {/* glowing windows (front) */}
+      <mesh position={[-(D + H) / 2, winY, H + 0.02]}>
+        <planeGeometry args={[1, 1.2]} />
         <meshStandardMaterial color={GLOW} emissive={GLOW} emissiveIntensity={1.2} toneMapped={false} />
       </mesh>
-      <mesh position={[(D + H) / 2, DOOR_H + 1.6, H + 0.02]}>
-        <planeGeometry args={[1.1, 1.3]} />
+      <mesh position={[(D + H) / 2, winY, H + 0.02]}>
+        <planeGeometry args={[1, 1.2]} />
         <meshStandardMaterial color={GLOW} emissive={GLOW} emissiveIntensity={1.2} toneMapped={false} />
       </mesh>
 
-      {/* shop gets a big BUTIK sign above the door, facing the street */}
-      {def.shop && <Sign text="BUTIK" height={0.9} position={[0, DOOR_H + 0.7, H + 0.12]} />}
+      {/* shop gets a big BUTIK sign above the door, facing outward */}
+      {def.shop && <Sign text="BUTIK" height={1.0} position={[0, DOOR_H + 0.8, H + 0.12]} />}
     </group>
   )
 }

@@ -16,6 +16,9 @@ Dyr Mod Zombier — asset credits
 3D models — CC0 (public domain, no attribution required, credited anyway):
   - Zombie             by Quaternius        https://poly.pizza/m/DM4QScSmbS
   - Dead tree          by Quaternius        https://poly.pizza/m/26H2UlEtWA
+  - Cat                by Quaternius        https://poly.pizza/m/2f54vbV0In
+  - Dog                by Quaternius        https://poly.pizza/m/1gXKv15ik8
+  - Cow                by Quaternius        https://poly.pizza/m/26zM1outCr
 
 The house/cottage is now built from simple shapes in code (Cottage.tsx), so you
 can walk inside — no downloaded house model is used.

@@ -42,14 +42,17 @@ type SignProps = {
   height?: number // world height of the sign
   color?: string
   bg?: string
+  oneSided?: boolean // only readable from the front (+z of the group)
 } & JSX.IntrinsicElements['group']
 
-/** A flat wooden sign board with text, double-sided so it reads from both ways. */
+/** A flat wooden sign board with text. Double-sided by default; pass oneSided to
+ *  make it readable only from the front (used so FARLIGT shows on the way out). */
 export function Sign({
   text,
   height = 0.8,
   color = '#3a2617',
   bg = '#d8b982',
+  oneSided = false,
   ...groupProps
 }: SignProps) {
   const { texture, aspect } = useMemo(() => makeTextTexture(text, color, bg), [text, color, bg])
@@ -58,7 +61,11 @@ export function Sign({
     <group {...groupProps}>
       <mesh castShadow>
         <planeGeometry args={[width, height]} />
-        <meshStandardMaterial map={texture} roughness={0.8} side={THREE.DoubleSide} />
+        <meshStandardMaterial
+          map={texture}
+          roughness={0.8}
+          side={oneSided ? THREE.FrontSide : THREE.DoubleSide}
+        />
       </mesh>
     </group>
   )

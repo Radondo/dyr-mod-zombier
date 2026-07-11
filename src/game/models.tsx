@@ -34,6 +34,9 @@ const MODEL_URLS = {
   grave3: asset('/models/grave3.glb'),
   cross: asset('/models/cross.glb'),
   deadtree: asset('/models/deadtree.glb'),
+  cat: asset('/models/cat.glb'),
+  dog: asset('/models/dog.glb'),
+  cow: asset('/models/cow.glb'),
 } as const
 
 export type ModelKey = keyof typeof MODEL_URLS

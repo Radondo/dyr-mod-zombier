@@ -34,12 +34,17 @@ export const DEAD_TREE_COUNT = 10
 export const GRAVEYARD_BAND_MIN = GARDEN_HALF + 1.5 // just outside the fence
 export const GRAVEYARD_BAND_MAX = GARDEN_HALF + 6.5
 
-// Zombies patrol a RECTANGULAR ring outside the square fence (never get in).
+// Zombies patrol a RECTANGULAR ring outside the square fence (never get in),
+// but HUNT the player once she steps outside the gate.
 export const ZOMBIE_COUNT = 6
 export const ZOMBIE_HEIGHT = 1.85
-export const ZOMBIE_SPEED = 0.8 // metres per second along the perimeter
+export const ZOMBIE_SPEED = 0.8 // metres per second while patrolling the perimeter
 export const ZOMBIE_OFFSET_MIN = 1.4 // metres beyond the fence
 export const ZOMBIE_OFFSET_MAX = 4.5
+export const ZOMBIE_CHASE_SPEED = 2.8 // m/s when hunting (below player speed, so escapable)
+export const ZOMBIE_AGGRO = 26 // start hunting when the player is this close AND outside
+export const CATCH_DISTANCE = 1.6 // caught if a zombie gets this close (outside only)
+export const CAUGHT_GOLD_LOSS = 0.3 // lose this fraction of your gold when caught
 
 // Companions (bee + ladybug) hover and trail the player inside the garden.
 export const BEE_HEIGHT = 0.45 // model size, not altitude

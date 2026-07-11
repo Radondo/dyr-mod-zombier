@@ -7,7 +7,12 @@ import { Player } from './Player'
 import { Hands } from './Hands'
 import { Companions } from './Companions'
 import { Zombies } from './Zombies'
-import { Coins } from './Coins'
+import { Coins, graveyardCoinSpots } from './Coins'
+import { Shop } from './Shop'
+import { Pets } from './Pets'
+
+// Dangerous coins out among the zombies (computed once, stable reference).
+const GRAVEYARD_COINS = graveyardCoinSpots()
 
 export function Scene() {
   return (
@@ -52,9 +57,12 @@ export function Scene() {
         <World />
         <Companions />
         <Zombies />
+        <Shop />
+        <Pets />
       </Suspense>
 
       <Coins />
+      <Coins spots={GRAVEYARD_COINS} value={10} />
 
       <Hands />
       <Player />

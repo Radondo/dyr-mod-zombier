@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Scene } from './game/Scene'
 import { TouchControls } from './game/TouchControls'
 import { GoldHud } from './game/GoldHud'
+import { CaughtOverlay } from './game/CaughtOverlay'
+import { ShopPrompt } from './game/ShopPrompt'
 import { isTouchDevice } from './game/input'
 
 function App() {
@@ -14,6 +16,8 @@ function App() {
 
       <div className="crosshair" />
       <GoldHud />
+      <CaughtOverlay />
+      <ShopPrompt />
 
       {isTouchDevice && <TouchControls onStart={() => setStarted(true)} />}
 

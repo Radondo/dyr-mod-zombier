@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { addGold } from './wallet'
 import { GARDEN_HALF, WALL_MARGIN } from './constants'
-import { HOUSES, HOUSE_HALF } from './layout'
+import { HOUSES } from './layout'
 
 const COIN_COUNT = 14
 const COIN_VALUE = 5
@@ -24,7 +24,7 @@ function makeRng(seed: number) {
 // True if (x,z) sits inside (or right next to) any village house.
 function insideAnyHouse(x: number, z: number) {
   return HOUSES.some(
-    (h) => Math.abs(x - h.pos[0]) < HOUSE_HALF + 1 && Math.abs(z - h.pos[2]) < HOUSE_HALF + 1,
+    (h) => Math.abs(x - h.pos[0]) < h.half + 1 && Math.abs(z - h.pos[2]) < h.half + 1,
   )
 }
 
@@ -43,11 +43,35 @@ function gardenCoinSpots() {
   return spots
 }
 
+// A point on the perimeter of a square of half-size R (f in 0..1).
+function rectPoint(R: number, f: number): [number, number, number] {
+  const side = 2 * R
+  const u = f * 4 * side
+  const seg = Math.floor(u / side) % 4
+  const c = -R + (u - seg * side)
+  if (seg === 0) return [c, COIN_Y, -R]
+  if (seg === 1) return [R, COIN_Y, c]
+  if (seg === 2) return [-c, COIN_Y, R]
+  return [-R, COIN_Y, -c]
+}
+
+// Dangerous coins scattered just outside the fence, among the zombies.
+export function graveyardCoinSpots(): [number, number, number][] {
+  const rng = makeRng(21)
+  return Array.from({ length: 10 }, () => rectPoint(GARDEN_HALF + 1.8 + rng() * 4.5, rng()))
+}
+
 /**
  * Spinning gold coins the player picks up by walking near them. Reusable for the
  * garden (default) or, later, the dangerous graveyard by passing custom spots.
  */
-export function Coins({ spots }: { spots?: [number, number, number][] }) {
+export function Coins({
+  spots,
+  value = COIN_VALUE,
+}: {
+  spots?: [number, number, number][]
+  value?: number
+}) {
   const positions = useMemo(() => spots ?? gardenCoinSpots(), [spots])
   const refs = useRef<(THREE.Group | null)[]>([])
   const collected = useRef<boolean[]>(positions.map(() => false))
@@ -66,7 +90,7 @@ export function Coins({ spots }: { spots?: [number, number, number][] }) {
       if (dx * dx + dz * dz < PICKUP_RADIUS * PICKUP_RADIUS) {
         collected.current[i] = true
         g.visible = false
-        addGold(COIN_VALUE)
+        addGold(value)
       }
     }
   })

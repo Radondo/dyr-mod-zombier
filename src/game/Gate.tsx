@@ -51,12 +51,15 @@ export function Gate() {
         <meshStandardMaterial color={POST} roughness={0.8} />
       </mesh>
 
-      {/* FARLIGT warning sign hanging under the beam */}
+      {/* FARLIGT warning sign under the beam — faces INTO the garden and is
+          one-sided, so you only read it on the way OUT, not on the way in. */}
       <Sign
         text="FARLIGT"
         height={0.75}
         color="#b02020"
         bg="#e9cf95"
+        oneSided
+        rotation={[0, Math.PI, 0]}
         position={[GATE_CENTER_X, GATE_POST_H - 0.35, GATE_Z]}
       />
 

@@ -1,0 +1,27 @@
+Dyr Mod Zombier — asset credits
+================================
+
+3D models (from Poly Pizza, https://poly.pizza) — Creative Commons Attribution (CC-BY):
+  - Bee                by jeremy            https://poly.pizza/m/6ktZgxSVVn1
+  - Ladybug            by Poly by Google    https://poly.pizza/m/0k_YwE0g_C9
+  - Tree (tree1)       by Poly by Google    https://poly.pizza/m/06dagPn-QYn
+  - Tree (tree2)       by Jarlan Perez      https://poly.pizza/m/0bUFnd68NWH
+  - Tree (tree3)       by Danni Bittman     https://poly.pizza/m/2Qo-fmVKuSG
+  - Fence              by Jarlan Perez      https://poly.pizza/m/1lOFMI3Pg8v
+  - Gravestone (grave1) by Poly by Google   https://poly.pizza/m/125x68MbyA0
+  - Gravestone (grave2) by sirkitree        https://poly.pizza/m/2U7G1pkP87N
+  - Gravestone (grave3) by sirkitree        https://poly.pizza/m/46vDmbyxgqQ
+  - Cross              by Poly by Google    https://poly.pizza/m/1uQSi6qTp6o
+
+3D models — CC0 (public domain, no attribution required, credited anyway):
+  - Zombie             by Quaternius        https://poly.pizza/m/DM4QScSmbS
+  - Dead tree          by Quaternius        https://poly.pizza/m/26H2UlEtWA
+
+The house/cottage is now built from simple shapes in code (Cottage.tsx), so you
+can walk inside — no downloaded house model is used.
+
+Textures — CC0 (public domain):
+  - Grass 001 (lawn ground, PBR)  from ambientCG  https://ambientcg.com/view?id=Grass001
+
+Sky:
+  - Procedural sky via @react-three/drei <Sky> (no downloaded asset)

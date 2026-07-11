@@ -7,12 +7,17 @@ import { Player } from './Player'
 import { Hands } from './Hands'
 import { Companions } from './Companions'
 import { Zombies } from './Zombies'
+import { Coins } from './Coins'
 
 export function Scene() {
   return (
     <Canvas
       shadows
-      camera={{ position: [0, EYE_HEIGHT, GARDEN_HALF - 3], fov: 72, near: 0.05, far: 400 }}
+      // Clamp the device-pixel-ratio: high-DPR tablets otherwise render at 2–3×
+      // resolution, which is the main cause of stutter/shake while walking.
+      dpr={[1, 1.75]}
+      gl={{ powerPreference: 'high-performance', antialias: true }}
+      camera={{ position: [0, EYE_HEIGHT, GARDEN_HALF - 3], fov: 72, near: 0.05, far: 300 }}
     >
       {/* Dusk sky — low sun for a moody, slightly dark graveyard evening. */}
       <Sky
@@ -36,11 +41,11 @@ export function Scene() {
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0004}
         shadow-camera-near={1}
-        shadow-camera-far={140}
-        shadow-camera-left={-40}
-        shadow-camera-right={40}
-        shadow-camera-top={40}
-        shadow-camera-bottom={-40}
+        shadow-camera-far={180}
+        shadow-camera-left={-55}
+        shadow-camera-right={55}
+        shadow-camera-top={55}
+        shadow-camera-bottom={-55}
       />
 
       <Suspense fallback={null}>
@@ -48,6 +53,8 @@ export function Scene() {
         <Companions />
         <Zombies />
       </Suspense>
+
+      <Coins />
 
       <Hands />
       <Player />

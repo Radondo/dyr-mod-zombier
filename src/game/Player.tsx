@@ -6,12 +6,10 @@ import {
   MOVE_SPEED,
   EYE_HEIGHT,
   GARDEN_HALF,
-  WALL_MARGIN,
   PLAYER_RADIUS,
   COTTAGE_WALL_T,
-  COTTAGE_POS,
 } from './constants'
-import { COTTAGE_WALLS } from './Cottage'
+import { WALL_SEGMENTS } from './layout'
 import { input, isTouchDevice } from './input'
 
 // Touch look sensitivity, in radians per pixel of drag (tablets only — desktop
@@ -83,11 +81,11 @@ export function Player() {
   // On desktop this is unused — PointerLockControls owns the camera rotation.
   const orient = useMemo(() => ({ yaw: 0, pitch: 0 }), [])
 
-  // Start standing in the garden, in front of the cottage, looking toward it
-  // (yaw 0 = facing -z, straight at the cottage).
+  // Start standing in the garden near the gate, looking toward the village
+  // (yaw 0 = facing -z, straight down the street).
   useEffect(() => {
-    camera.position.set(0, EYE_HEIGHT, GARDEN_HALF - 3)
-    camera.lookAt(0, EYE_HEIGHT, COTTAGE_POS[2])
+    camera.position.set(0, EYE_HEIGHT, GARDEN_HALF - 4)
+    camera.lookAt(0, EYE_HEIGHT, -GARDEN_HALF)
     orient.yaw = 0
     orient.pitch = 0
   }, [camera, orient])
@@ -127,15 +125,17 @@ export function Player() {
       camera.position.addScaledVector(move, MOVE_SPEED * delta)
     }
 
-    // Keep the player inside the fenced garden.
-    const limit = GARDEN_HALF - WALL_MARGIN
-    camera.position.x = THREE.MathUtils.clamp(camera.position.x, -limit, limit)
-    camera.position.z = THREE.MathUtils.clamp(camera.position.z, -limit, limit)
-
-    // Collide with the cottage walls (but walk freely through the doorway).
-    for (const w of COTTAGE_WALLS) {
+    // Collide with the fence perimeter + every village house. The gate gap and
+    // the house doorways are simply missing segments, so you can walk out
+    // through the gate and step inside houses.
+    for (const w of WALL_SEGMENTS) {
       collideWall(camera.position, w.a[0], w.a[1], w.b[0], w.b[1])
     }
+
+    // Safety net so you can't wander off the edge of the world past the gate.
+    const outer = GARDEN_HALF + 30
+    camera.position.x = THREE.MathUtils.clamp(camera.position.x, -outer, outer)
+    camera.position.z = THREE.MathUtils.clamp(camera.position.z, -outer, outer)
 
     camera.position.y = EYE_HEIGHT
   })

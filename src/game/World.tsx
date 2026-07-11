@@ -4,9 +4,11 @@ import * as THREE from 'three'
 import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import { useGLTF } from '@react-three/drei'
 import { Model, TREE_KEYS } from './models'
-import { Cottage } from './Cottage'
+import { Village } from './Village'
+import { Gate } from './Gate'
 import { Graveyard } from './Graveyard'
 import { asset } from './assets'
+import { GATE_CENTER_X, GATE_HALF } from './layout'
 import {
   GARDEN_HALF,
   FENCE_HEIGHT,
@@ -71,9 +73,12 @@ function Fence() {
     const list: { pos: [number, number, number]; rotY: number }[] = []
     for (let i = 0; i < n; i++) {
       const t = -GARDEN_HALF + (i + 0.5) * step
-      // North & south sides (run along x, at z = ±GARDEN_HALF)
+      // North side (-z) runs the full width.
       list.push({ pos: [t, 0, -GARDEN_HALF], rotY: 0 })
-      list.push({ pos: [t, 0, GARDEN_HALF], rotY: 0 })
+      // South side (+z) has the gate opening — skip panels inside it.
+      if (Math.abs(t - GATE_CENTER_X) > GATE_HALF + step * 0.5) {
+        list.push({ pos: [t, 0, GARDEN_HALF], rotY: 0 })
+      }
       // East & west sides (run along z, at x = ±GARDEN_HALF) — rotated 90°
       list.push({ pos: [-GARDEN_HALF, 0, t], rotY: Math.PI / 2 })
       list.push({ pos: [GARDEN_HALF, 0, t], rotY: Math.PI / 2 })
@@ -142,7 +147,8 @@ export function World() {
       <Fence />
       <Forest />
       <Graveyard />
-      <Cottage />
+      <Village />
+      <Gate />
     </group>
   )
 }
